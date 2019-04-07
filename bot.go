@@ -688,6 +688,32 @@ func (b *Bot) EditCaption(originalMsg Editable, caption string) (*Message, error
 	return extractMsgResponse(respJSON)
 }
 
+// EditCaption used to edit already sent photo caption with known recepient and message id.
+//
+// On success, returns edited message object
+func (b *Bot) EditReplyMarkup(originalMsg Editable, inlineKeyboard [][]InlineButton) (*Message, error) {
+	messageID, chatID := originalMsg.MessageSig()
+
+	params := map[string]string{}
+
+	embedSendOptions(params, extractOptions([]interface{}{&ReplyMarkup{InlineKeyboard: inlineKeyboard}}))
+
+	// if inline message
+	if chatID == 0 {
+		params["inline_message_id"] = messageID
+	} else {
+		params["chat_id"] = strconv.FormatInt(chatID, 10)
+		params["message_id"] = messageID
+	}
+
+	respJSON, err := b.Raw("editMessageReplyMarkup", params)
+	if err != nil {
+		return nil, err
+	}
+
+	return extractMsgResponse(respJSON)
+}
+
 // Delete removes the message, including service messages,
 // with the following limitations:
 //
